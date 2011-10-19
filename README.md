@@ -18,7 +18,7 @@ Main features and possibilites:
 * Full code coverage.
 * Can work with simple BBCode or other HTML-like markup languages.
 
-CDom is written for Anizoptera CMF by [Amal Samally](amal.samally@gmail.com)
+CDom is written for Anizoptera CMF by Amal Samally (amal.samally at gmail.com)
 
 
 Documentation
