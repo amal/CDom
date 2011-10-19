@@ -1,25 +1,30 @@
 CDom
 ====
 
+https://github.com/amal/CDom
+
 CDom is a simple HTML/XML/BBCode DOM component.
 It provides a parser for HTML-like markup language in the DOM-like structure and support searching through the DOM with full strength of CSS3 selectors and any manipulations.
-CDom is based on [PHP Simple HTML DOM Parser] [http://simplehtmldom.sourceforge.net/] and licensed under the MIT License.
+CDom is based on [PHP Simple HTML DOM Parser](http://simplehtmldom.sourceforge.net/) and licensed under the MIT License.
+
+Main features and possibilites:
 
 * Traversing and manipulations in jQuery-like manner for PHP.
 * Automatic detection of encoding.
 * Supports damaged and malformed html.
-* Full support of [CSS3 selectors] [http://www.w3.org/TR/css3-selectors/].
-* Support of [jQuery selector extensions] [http://api.jquery.com/category/selectors/jquery-selector-extensions/].
+* Full support of [CSS3 selectors](http://www.w3.org/TR/css3-selectors/).
+* Support of [jQuery selector extensions](http://api.jquery.com/category/selectors/jquery-selector-extensions/).
 * Extract contents from DOM as text or html in a single line.
 * Full code coverage.
 * Can work with simple BBCode or other HTML-like markup languages.
 
-CDom is written for Anizoptera CMF by Amal Samally <amal.samally at gmail.com>
+CDom is written for Anizoptera CMF by [Amal Samally](amal.samally@gmail.com)
 
 
 Documentation
 -------------
 
+CDom use is very simple. Most of the methods match the jQuery's ones. All methods are detail commented. Your IDE can easy show autocompletion, if support PHPDoc. And you can see examples of using below.
 Full documentation will be soon.
 
 
