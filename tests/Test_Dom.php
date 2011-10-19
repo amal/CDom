@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/phpunit.bootstrap.php';
+require_once __DIR__ . '/../CDom.php';
 
 
 /**
@@ -8,7 +8,7 @@ require_once __DIR__ . '/phpunit.bootstrap.php';
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: Test_Dom.php 2725 2011-10-18 17:03:13Z samally $
+ * @version $Id: Test_Dom.php 2727 2011-10-19 09:11:46Z samally $
  */
 class Test_Dom extends PHPUnit_Framework_TestCase
 {
@@ -817,8 +817,8 @@ TXT;
 TXT;
 		$dom = CDom::fromString($markup);
 		$this->checkStructure($dom);
-		$this->assertEquals(1, count($dom->firstChild->nodes));
-		$this->assertTrue($dom->firstChild->firstNode instanceof CDomNodeText);
+		$this->assertEquals(0, count($dom->firstChild->nodes));
+		$this->assertContains('medialand_adland_inline_div_750', $dom->firstChild->value);
 		$dom->clean();
 	}
 
@@ -3028,7 +3028,7 @@ HTML;
 		// ReplaceAll
 		$string = str_repeat('text<b/>', 3);
 		$dom->html($string);
-		$dom->nodes[2]->replaceAll('b:eq(1)');
+		$res = $dom->nodes[2]->replaceAll('b:eq(1)');
 		$this->assertEquals($dom->nodes[2]->uniqId, $res[0]->uniqId);
 		$this->assertEquals(2, count($dom->children));
 		$this->assertEquals(5, count($dom->nodes));

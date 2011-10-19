@@ -11,7 +11,7 @@
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2725 2011-10-18 17:03:13Z samally $
+ * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
  * @author Amal Samally <amal.samally at gmail.com>
  * @license MIT
  */
@@ -27,7 +27,7 @@ require __DIR__ . '/CLexer.php';
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2725 2011-10-18 17:03:13Z samally $
+ * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
  */
 class CDom extends CLexer
 {
@@ -212,9 +212,11 @@ class CDom extends CLexer
 	);
 
 	/**
-	 * Tags to skip contents as text
+	 * Tags to skip contents.
+	 * Contents of this tags will be saved in their 'value' property
+	 * without creating of text nodes
 	 */
-	public static $textContents = array(
+	public static $skipContents = array(
 		'script'=> true,
 		'style' => true,
 	);
@@ -271,7 +273,7 @@ class CDom extends CLexer
 	/**
 	 * Last parsed node
 	 *
-	 * @var CDomNode
+	 * @var CDomNode|CDomNodeTag
 	 */
 	protected $last;
 
@@ -543,8 +545,10 @@ class CDom extends CLexer
 				$debug && $this->debug('Lexer: Opening tag');
 				if ($this->parseTag()) {
 					// Skip contents as text
-					if (isset(self::$textContents[$parent->name])) {
-						$prefix = $this->getUntilString("$bo/$parent->name");
+					if (isset(self::$skipContents[$parent->name])) {
+						if (!$last->selfClosed) {
+							$last->value = $this->getUntilString("$bo/$parent->name");
+						}
 					}
 					continue;
 				}
@@ -970,7 +974,7 @@ class CDom extends CLexer
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2725 2011-10-18 17:03:13Z samally $
+ * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
  *
  * @property string           $nodeName               Alias of "name"
  * @property int              $nodeType               Alias of "type"
@@ -2519,14 +2523,14 @@ abstract class CDomNode
 		}
 
 		if ($level === 0) {
-			echo EOL;
+			echo "\n";
 		}
 
 		/** @var $obj CDomNodeTag|CDomNode */
 		$obj = $this;
 
 		if ($isTag = ($obj->type === CDom::NODE_ELEMENT)) {
-			$current = '<' . $obj->name;
+			$current = CDom::$bracketOpen . $obj->name;
 		} else {
 			$current = $obj->name;
 		}
@@ -2538,9 +2542,9 @@ abstract class CDomNode
 			if ($obj->selfClosed) {
 				echo ' /';
 			}
-			echo '>';
+			echo CDom::$bracketClose;
 		}
-		echo EOL;
+		echo "\n";
 
 		if (count($obj->nodes)) {
 			foreach ($obj->nodes as $node) {
@@ -2549,8 +2553,8 @@ abstract class CDomNode
 		}
 
 		if ($level === 0) {
-			echo EOL;
-			IS_CLI && ob_get_level() > 0 && @ob_flush();
+			echo "\n";
+			PHP_SAPI === 'cli' && ob_get_level() > 0 && @ob_flush();
 			return $this;
 		}
 
@@ -2566,7 +2570,7 @@ abstract class CDomNode
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2725 2011-10-18 17:03:13Z samally $
+ * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
  */
 class CDomDocument extends CDomNode
 {
@@ -2607,7 +2611,7 @@ class CDomDocument extends CDomNode
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2725 2011-10-18 17:03:13Z samally $
+ * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
  */
 class CDomNodeTag extends CDomNode
 {
@@ -2716,7 +2720,7 @@ class CDomNodeTag extends CDomNode
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2725 2011-10-18 17:03:13Z samally $
+ * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
  */
 class CDomNodeXmlDeclaration extends CDomNodeText
 {
@@ -2778,7 +2782,7 @@ class CDomNodeXmlDeclaration extends CDomNodeText
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2725 2011-10-18 17:03:13Z samally $
+ * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
  */
 class CDomNodeDoctype extends CDomNode
 {
@@ -2858,7 +2862,7 @@ class CDomNodeDoctype extends CDomNode
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2725 2011-10-18 17:03:13Z samally $
+ * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
  */
 class CDomNodeText extends CDomNode
 {
@@ -2945,7 +2949,7 @@ class CDomNodeText extends CDomNode
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2725 2011-10-18 17:03:13Z samally $
+ * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
  */
 class CDomNodeCdata extends CDomNodeText
 {
@@ -2980,7 +2984,7 @@ class CDomNodeCdata extends CDomNodeText
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2725 2011-10-18 17:03:13Z samally $
+ * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
  */
 class CDomNodeCommment extends CDomNodeText
 {
@@ -3046,7 +3050,7 @@ class CDomNodeCommment extends CDomNodeText
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2725 2011-10-18 17:03:13Z samally $
+ * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
  */
 class CDomAttribute
 {
@@ -3114,7 +3118,7 @@ class CDomAttribute
 		if ($value === null) {
 			return $this->value === true ? $this->name : $this->value;
 		}
-		$this->value = $value === true ? $value : html_entity_decode($value, ENT_QUOTES, Common::CHARSET);
+		$this->value = $value === true ? $value : html_entity_decode($value, ENT_QUOTES, CDom::CHARSET);
 		return null;
 	}
 
@@ -3132,7 +3136,7 @@ class CDomAttribute
 			}
 			$val = $this->name;
 		} else {
-			$val = htmlSpecialChars($val, ENT_QUOTES, Common::CHARSET);
+			$val = htmlSpecialChars($val, ENT_QUOTES, CDom::CHARSET);
 		}
 		return $this->name . '="' . $val . '"';
 	}
@@ -3191,7 +3195,7 @@ class CDomAttribute
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2725 2011-10-18 17:03:13Z samally $
+ * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
  */
 class CDomSelector extends CLexer
 {
@@ -4223,7 +4227,7 @@ class CDomSelector extends CLexer
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2725 2011-10-18 17:03:13Z samally $
+ * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
  */
 abstract class CDomList implements Iterator, ArrayAccess, Countable
 {
@@ -4486,7 +4490,7 @@ abstract class CDomList implements Iterator, ArrayAccess, Countable
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2725 2011-10-18 17:03:13Z samally $
+ * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
  *
  * @property CDomAttribute[] $list Internal attributes list
  */
@@ -4609,7 +4613,7 @@ class CDomAttributesList extends CDomList
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2725 2011-10-18 17:03:13Z samally $
+ * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
  *
  * @method CDomNodeTag   get(int $n) Returns node by it's position in list.
  * @method CDomNodesList clone()     Create a deep copy of the set of elements.
@@ -6042,9 +6046,9 @@ class CDomNodesList extends CDomList
 				$node->dump($attributes, $text_nodes);
 			}
 		} else {
-			echo EOL;
+			echo "\n";
 		}
-		echo 'NodesList dump: ' . $this->length . EOL;
-		IS_CLI && ob_get_level() > 0 && @ob_flush();
+		echo 'NodesList dump: ' . $this->length . "\n";
+		PHP_SAPI === 'cli' && ob_get_level() > 0 && @ob_flush();
 	}
 }

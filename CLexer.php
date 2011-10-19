@@ -12,7 +12,7 @@ abstract class CLexer
 	/**
 	 * Charset of processing string.
 	 */
-	const CHARSET = Common::CHARSET;
+	const CHARSET = 'UTF-8';
 
 	/**
 	 * Space characters mask.
@@ -66,7 +66,7 @@ abstract class CLexer
 		// every control character except newline (dec 10), carriage return (dec 13), and horizontal tab (dec 09)
 		// url encoded 00-08, 11, 12, 14, 15
 		// url encoded 16-31
-		$string = preg_replace('/' . CRegexp::NON_DISPLAYABLE . '|%0[0-8bcef]|%1[0-9a-f]/SXu', '', $string);
+		$string = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]+|%0[0-8bcef]|%1[0-9a-f]/SXu', '', $string);
 	}
 
 
