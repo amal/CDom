@@ -11,7 +11,7 @@
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
+ * @version $Id: CDom.php 2740 2011-10-24 11:53:48Z samally $
  * @author Amal Samally <amal.samally at gmail.com>
  * @license MIT
  */
@@ -27,7 +27,7 @@ require __DIR__ . '/CLexer.php';
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
+ * @version $Id: CDom.php 2740 2011-10-24 11:53:48Z samally $
  */
 class CDom extends CLexer
 {
@@ -678,10 +678,14 @@ class CDom extends CLexer
 	 */
 	protected function parseTag()
 	{
+		$chr = &$this->chr;
+
 		// Name
-		$this->skipChars(self::CHARS_SPACE);
+		if (strpos($chars_space = self::CHARS_SPACE, $chr) !== false) {
+			$this->skipChars($chars_space);
+		}
 		$bc  = self::$bracketClose;
-		$tag = $this->getUntilChars($bc." /\n\t");
+		$tag = $this->getUntilChars($bc.'/'.$chars_space);
 		if ($tag == '') {
 			$this->debug('Lexer ERROR: Tag name not found');
 			return false;
@@ -691,10 +695,12 @@ class CDom extends CLexer
 		$attributes = $this->parseParameters();
 
 		// We can get self-closing tag here
-		if (($chr = &$this->chr) === '/') {
+		if ($chr === '/') {
 			$closed = true;
 			$this->movePos();
-			$this->skipChars(self::CHARS_SPACE);
+			if (strpos($chars_space, $chr) !== false) {
+				$this->skipChars($chars_space);
+			}
 		} else {
 			$closed = false;
 		}
@@ -750,7 +756,10 @@ class CDom extends CLexer
 	protected function parseTagClose()
 	{
 		$this->movePos();
-		$this->skipChars(self::CHARS_SPACE);
+		$chr = &$this->chr;
+		if (strpos($chars_space = self::CHARS_SPACE, $chr) !== false) {
+			$this->skipChars($chars_space);
+		}
 
 		// Name & check
 		$tag = $this->getUntilString(self::$bracketClose, $res);
@@ -769,7 +778,7 @@ class CDom extends CLexer
 		}
 
 		$parentName = $this->parent->name;
-		$tagName = mb_strtolower($tag, self::CHARSET);
+		$tagName = strtolower($tag);
 
 		// Search for closing tag
 		$skipping = false;
@@ -890,36 +899,41 @@ class CDom extends CLexer
 	protected function parseParameters()
 	{
 		$attributes = null;
-		$curChr = &$this->chr;
+		$chr = &$this->chr;
 		$bc = self::$bracketClose;
 		$chars_space = self::CHARS_SPACE;
 		$chars_end = '/' . $chars_space . $bc;
 		$chars_eq = '=' . $chars_end;
-
-		$this->skipChars($chars_space);
+		if (strpos($chars_space, $chr) !== false) {
+			$this->skipChars($chars_space);
+		}
 		do {
 			// Name
-			if (($name = rtrim($this->getUntilChars($chars_eq))) === '') {
+			if (($name = $this->getUntilChars($chars_eq)) === '') {
 				break;
 			}
-			$this->skipChars($chars_space);
-			if ($curChr !== '=') {
+			if (strpos($chars_space, $chr) !== false) {
+				$this->skipChars($chars_space);
+			}
+			if ($chr !== '=') {
 				if ($attributes === null) {
 					$attributes = new CDomAttributesList;
 				}
 				$attributes->set($name, true);
-				if ($curChr === $bc || $curChr === '/') {
+				if ($chr === $bc || $chr === '/') {
 					break;
 				}
 				continue;
 			}
 
 			$this->movePos();
-			$this->skipChars($chars_space);
+			if (strpos($chars_space, $chr) !== false) {
+				$this->skipChars($chars_space);
+			}
 
 			// Value
-			if ($curChr === "'" || $curChr === '"') {
-				$quote = $curChr;
+			if ($chr === "'" || $chr === '"') {
+				$quote = $chr;
 				$this->movePos();
 			} else {
 				$quote = false;
@@ -935,8 +949,10 @@ class CDom extends CLexer
 				$attributes = new CDomAttributesList;
 			}
 			$attributes->set($name, $value);
-			$this->skipChars($chars_space);
-		} while ($curChr !== null);
+			if (strpos($chars_space, $chr) !== false) {
+				$this->skipChars($chars_space);
+			}
+		} while ($chr !== null);
 
 		return $attributes;
 	}
@@ -974,7 +990,7 @@ class CDom extends CLexer
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
+ * @version $Id: CDom.php 2740 2011-10-24 11:53:48Z samally $
  *
  * @property string           $nodeName               Alias of "name"
  * @property int              $nodeType               Alias of "type"
@@ -1125,14 +1141,14 @@ abstract class CDomNode
 	 *
 	 * WARNING: Node will be damaged for further use!
 	 */
-	public function clean()
+	public function clear()
 	{
 		$this->attributes    = null;
 		$this->next          = null;
 		$this->prev          = null;
 		$this->parent        = null;
 		$this->ownerDocument = null;
-		$this->cleanChildren();
+		$this->clearChildren();
 	}
 
 	/**
@@ -1140,10 +1156,10 @@ abstract class CDomNode
 	 *
 	 * @return CDomNode
 	 */
-	public function cleanChildren()
+	public function clearChildren()
 	{
 		foreach ($this->nodes as $node) {
-			$node->clean();
+			$node->clear();
 		}
 		$this->firstChild = null;
 		$this->lastChild  = null;
@@ -1189,7 +1205,7 @@ abstract class CDomNode
 		}
 		// empty
 		else if ($name_l === 'empty') {
-			return $this->cleanChildren();
+			return $this->clearChildren();
 		}
 		// innerHtml
 		else if ($name_l === 'innerhtml') {
@@ -1434,7 +1450,7 @@ abstract class CDomNode
 			else if (!($value instanceof CDomNodeText)) {
 				$value = new CDomNodeText($value->text());
 			}
-			return $this->cleanChildren()->append($value);
+			return $this->clearChildren()->append($value);
 		}
 
 		// Get
@@ -1492,7 +1508,7 @@ abstract class CDomNode
 	{
 		// Set
 		if ($value !== null) {
-			$this->cleanChildren();
+			$this->clearChildren();
 			if (!is_object($value) && !is_array($value)) {
 				$value = CDom::fromString($value)->detachChildren();
 			}
@@ -1712,7 +1728,7 @@ abstract class CDomNode
 				if ($n instanceof CDomNodeTag) {
 					$replaceChild = true;
 				}
-				$n->clean();
+				$n->clear();
 			}
 			$cnid++;
 		}
@@ -1881,6 +1897,11 @@ abstract class CDomNode
 			} else {
 				$target = array($target);
 			}
+		} else {
+			$list = new CDomNodesList;
+			$list->add($target);
+			$target = $list->list;
+			unset($list);
 		}
 		if ($target) {
 			// Prepare object
@@ -2033,9 +2054,9 @@ abstract class CDomNode
 			return false;
 		}
 		$content = clone $content;
-		$content->cleanChildren();
+		$content->clearChildren();
 		if (isset($dom)) {
-			$dom->clean();
+			$dom->clear();
 		}
 		return $content;
 	}
@@ -2175,7 +2196,7 @@ abstract class CDomNode
 	public function remove()
 	{
 		$this->detach();
-		$this->clean();
+		$this->clear();
 	}
 
 
@@ -2534,7 +2555,7 @@ abstract class CDomNode
 		} else {
 			$current = $obj->name;
 		}
-		echo str_repeat('    ', $level) . $current;
+		echo str_repeat('    ', $level) , $current;
 		if ($attributes && $obj->attributes) {
 			echo $obj->attributes;
 		}
@@ -2570,7 +2591,7 @@ abstract class CDomNode
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
+ * @version $Id: CDom.php 2740 2011-10-24 11:53:48Z samally $
  */
 class CDomDocument extends CDomNode
 {
@@ -2611,7 +2632,7 @@ class CDomDocument extends CDomNode
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
+ * @version $Id: CDom.php 2740 2011-10-24 11:53:48Z samally $
  */
 class CDomNodeTag extends CDomNode
 {
@@ -2666,7 +2687,7 @@ class CDomNodeTag extends CDomNode
 	{
 		parent::__construct();
 
-		$l_name = mb_strtolower($name, CDom::CHARSET);
+		$l_name = strtolower($name);
 
 		if (!$closed && isset(CDom::$selfClosingTags[$l_name])) {
 			$closed = true;
@@ -2720,7 +2741,7 @@ class CDomNodeTag extends CDomNode
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
+ * @version $Id: CDom.php 2740 2011-10-24 11:53:48Z samally $
  */
 class CDomNodeXmlDeclaration extends CDomNodeText
 {
@@ -2782,7 +2803,7 @@ class CDomNodeXmlDeclaration extends CDomNodeText
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
+ * @version $Id: CDom.php 2740 2011-10-24 11:53:48Z samally $
  */
 class CDomNodeDoctype extends CDomNode
 {
@@ -2862,7 +2883,7 @@ class CDomNodeDoctype extends CDomNode
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
+ * @version $Id: CDom.php 2740 2011-10-24 11:53:48Z samally $
  */
 class CDomNodeText extends CDomNode
 {
@@ -2949,7 +2970,7 @@ class CDomNodeText extends CDomNode
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
+ * @version $Id: CDom.php 2740 2011-10-24 11:53:48Z samally $
  */
 class CDomNodeCdata extends CDomNodeText
 {
@@ -2984,7 +3005,7 @@ class CDomNodeCdata extends CDomNodeText
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
+ * @version $Id: CDom.php 2740 2011-10-24 11:53:48Z samally $
  */
 class CDomNodeCommment extends CDomNodeText
 {
@@ -3050,7 +3071,7 @@ class CDomNodeCommment extends CDomNodeText
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
+ * @version $Id: CDom.php 2740 2011-10-24 11:53:48Z samally $
  */
 class CDomAttribute
 {
@@ -3099,11 +3120,11 @@ class CDomAttribute
 	{
 		if ($real_name === null) {
 			$real_name = $name;
-			$name = mb_strtolower($name, CDom::CHARSET);
+			$name = strtolower($name);
 		}
 		$this->name = $name;
 		$this->nameReal = $real_name;
-		$this->value($value);
+		$this->value = $value;
 	}
 
 	/**
@@ -3118,7 +3139,7 @@ class CDomAttribute
 		if ($value === null) {
 			return $this->value === true ? $this->name : $this->value;
 		}
-		$this->value = $value === true ? $value : html_entity_decode($value, ENT_QUOTES, CDom::CHARSET);
+		$this->value = $value;
 		return null;
 	}
 
@@ -3136,7 +3157,7 @@ class CDomAttribute
 			}
 			$val = $this->name;
 		} else {
-			$val = htmlSpecialChars($val, ENT_QUOTES, CDom::CHARSET);
+			$val = htmlSpecialChars($val, ENT_QUOTES, CDom::CHARSET, false);
 		}
 		return $this->name . '="' . $val . '"';
 	}
@@ -3195,7 +3216,7 @@ class CDomAttribute
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
+ * @version $Id: CDom.php 2740 2011-10-24 11:53:48Z samally $
  */
 class CDomSelector extends CLexer
 {
@@ -3279,8 +3300,8 @@ class CDomSelector extends CLexer
 		$this->chr = $this->string[0];
 		$this->pos = 0;
 
-		$curChr = &$this->chr;
-		$curPos = &$this->pos;
+		$chr = &$this->chr;
+		$pos = &$this->pos;
 
 		$mask_space = self::CHARS_SPACE;
 		$mask_hierarchy = '~+>';
@@ -3312,60 +3333,60 @@ class CDomSelector extends CLexer
 				// Element name
 				$str = $this->getUntilChars($mask);
 				if ($str !== '') {
-					$sel['e'] = mb_strtolower($str, self::CHARSET);
+					$sel['e'] = strtolower($str);
 				}
 
 				// Additional
-				if ($curChr !== null) {
+				if ($chr !== null) {
 					// Attributes & Modifiers
 					do {
 						// Class selector
 						// Equivalent of [class~=value]
-						if ($curChr === '.') {
+						if ($chr === '.') {
 							$this->movePos();
 							$str = $this->getUntilChars($mask);
 							if ($str === '') {
-								throw new InvalidArgumentException("Expects valid class name at pos #$curPos.");
+								throw new InvalidArgumentException("Expects valid class name at pos #$pos.");
 							}
 							$sel['a']["class~=$str"] = array('class', $str, '~=');
 						}
 
 						// Id selector
 						// Equivalent of [name="value"]
-						else if ($curChr === '#') {
+						else if ($chr === '#') {
 							$this->movePos();
 							$str = $this->getUntilChars($mask);
 							if ($str === '') {
-								throw new InvalidArgumentException("Expects valid id name at pos #$curPos.");
+								throw new InvalidArgumentException("Expects valid id name at pos #$pos.");
 							}
 							$sel['a']["id=$str"] = array('id', $str, '=');
 						}
 
 						// Attribute selector
-						else if ($curChr === '[') {
+						else if ($chr === '[') {
 							$eq = $value = '';
 
 							// Name
 							$this->movePos();
 							$name = $this->getUntilChars($mask_eq);
 							if ($name === '') {
-								throw new InvalidArgumentException("Expects valid attribute name at pos #$curPos.");
+								throw new InvalidArgumentException("Expects valid attribute name at pos #$pos.");
 							}
-							$name = mb_strtolower($name, self::CHARSET);
+							$name = strtolower($name);
 
 							// Value
-							if ($curChr !== ']') {
-								if ($curChr !== '=') {
-									$eq .= $curChr;
+							if ($chr !== ']') {
+								if ($chr !== '=') {
+									$eq .= $chr;
 									if ($this->movePos() !== '=') {
-										throw new InvalidArgumentException("Expects equals sign at pos #$curPos.");
+										throw new InvalidArgumentException("Expects equals sign at pos #$pos.");
 									}
 								}
-								$eq .= $curChr;
+								$eq .= $chr;
 								$this->movePos();
 
-								if ($curChr === "'" || $curChr === '"') {
-									$quote = $curChr;
+								if ($chr === "'" || $chr === '"') {
+									$quote = $chr;
 									$this->movePos();
 								} else {
 									$quote = false;
@@ -3376,10 +3397,10 @@ class CDomSelector extends CLexer
 									$value = $this->getUntilCharEscape($quote, $res, true);
 									if (!$res) {
 										throw new InvalidArgumentException(
-											"Expects quote after parameter at pos #$curPos."
+											"Expects quote after parameter at pos #$pos."
 										);
 									}
-									if ($curChr !== ']') {
+									if ($chr !== ']') {
 										$res = false;
 									}
 								} else {
@@ -3387,7 +3408,7 @@ class CDomSelector extends CLexer
 									$value = $this->getUntilString(']', $res, true);
 								}
 								if (!$res) {
-									throw new InvalidArgumentException("Expects sign ']' at pos #$curPos.");
+									throw new InvalidArgumentException("Expects sign ']' at pos #$pos.");
 								}
 							}
 
@@ -3397,24 +3418,24 @@ class CDomSelector extends CLexer
 						}
 
 						// Pseudo-class
-						else if ($curChr === ':') {
+						else if ($chr === ':') {
 							// Name
 							$this->movePos();
 							$name = $this->getUntilChars($mask.'(');
 							if ($name === '') {
 								throw new InvalidArgumentException(
-									"Expects valid pseudo-selector at pos #$curPos."
+									"Expects valid pseudo-selector at pos #$pos."
 								);
 							}
-							$name = mb_strtolower($name, self::CHARSET);
+							$name = strtolower($name);
 
 							// Value
-							if ($curChr === '(') {
+							if ($chr === '(') {
 								$this->movePos();
 								$value = $this->getUntilCharEscape(')', $res, true);
 								if (!$res) {
 									throw new InvalidArgumentException(
-										"Expects closing bracket at pos #$curPos."
+										"Expects closing bracket at pos #$pos."
 									);
 								}
 							} else {
@@ -3451,18 +3472,18 @@ class CDomSelector extends CLexer
 						}
 					} while (true);
 
-					if ($curChr !== null) {
+					if ($chr !== null) {
 						// Hierarchy
 						$this->skipChars($mask_space);
 						$continue = true;
-						if ($curChr === '~' || $curChr === '+' || $curChr === '>') {
-							$h = $curChr;
+						if ($chr === '~' || $chr === '+' || $chr === '>') {
+							$h = $chr;
 							$this->movePos();
 							$this->skipChars($mask_space);
 						} else {
 							$h = false;
 							// Next group
-							if ($curChr === ',') {
+							if ($chr === ',') {
 								$continue = false;
 								$this->movePos();
 								$this->skipChars($mask_space);
@@ -3487,7 +3508,7 @@ class CDomSelector extends CLexer
 			} while ($continue);
 
 			$struct[] = $cSel;
-		} while ($curChr !== null);
+		} while ($chr !== null);
 
 		return self::$structCache[$selector] = &$struct;
 	}
@@ -4227,7 +4248,7 @@ class CDomSelector extends CLexer
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
+ * @version $Id: CDom.php 2740 2011-10-24 11:53:48Z samally $
  */
 abstract class CDomList implements Iterator, ArrayAccess, Countable
 {
@@ -4490,7 +4511,7 @@ abstract class CDomList implements Iterator, ArrayAccess, Countable
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
+ * @version $Id: CDom.php 2740 2011-10-24 11:53:48Z samally $
  *
  * @property CDomAttribute[] $list Internal attributes list
  */
@@ -4527,7 +4548,7 @@ class CDomAttributesList extends CDomList
 	 */
 	public function get($name)
 	{
-		$name_l = mb_strtolower($name, CDom::CHARSET);
+		$name_l = strtolower($name);
 		return isset($this->list[$name_l]) ? $this->list[$name_l] : null;
 	}
 
@@ -4539,7 +4560,7 @@ class CDomAttributesList extends CDomList
 	 */
 	public function set($name, $value)
 	{
-		$name_l = mb_strtolower($name, CDom::CHARSET);
+		$name_l = strtolower($name);
 
 		if (isset($this->list[$name_l])) {
 			$attr = $this->list[$name_l];
@@ -4561,7 +4582,7 @@ class CDomAttributesList extends CDomList
 	 */
 	public function has($name)
 	{
-		$name_l = mb_strtolower($name, CDom::CHARSET);
+		$name_l = strtolower($name);
 		return isset($this->list[$name_l]);
 	}
 
@@ -4572,7 +4593,7 @@ class CDomAttributesList extends CDomList
 	 */
 	public function delete($name)
 	{
-		$name_l = mb_strtolower($name, CDom::CHARSET);
+		$name_l = strtolower($name);
 		unset($this->list[$name_l]);
 	}
 
@@ -4613,7 +4634,7 @@ class CDomAttributesList extends CDomList
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: CDom.php 2727 2011-10-19 09:11:46Z samally $
+ * @version $Id: CDom.php 2740 2011-10-24 11:53:48Z samally $
  *
  * @method CDomNodeTag   get(int $n) Returns node by it's position in list.
  * @method CDomNodesList clone()     Create a deep copy of the set of elements.
@@ -4697,7 +4718,7 @@ class CDomNodesList extends CDomList
 		// empty
 		else if ($name_l === 'empty') {
 			foreach ($this->list as $node) {
-				$node->cleanChildren();
+				$node->clearChildren();
 			}
 			return $this;
 		}
@@ -4833,12 +4854,12 @@ class CDomNodesList extends CDomList
 		}
 		if (is_array($value)) {
 			foreach ($value as $node) {
-				if (!isset($this->listByIds[$uid = $node->uniqId])) {
+				if ($node instanceof CDomNode && !isset($this->listByIds[$uid = $node->uniqId])) {
 					$this->listByIds[$uid] = $node;
 					$this->list[] = $node;
 				}
 			}
-		} else if (!isset($this->listByIds[$uid = $value->uniqId])) {
+		} else if ($value instanceof CDomNode && !isset($this->listByIds[$uid = $value->uniqId])) {
 			$this->listByIds[$uid] = $value;
 			$this->list[] = $value;
 		}
@@ -6048,7 +6069,7 @@ class CDomNodesList extends CDomList
 		} else {
 			echo "\n";
 		}
-		echo 'NodesList dump: ' . $this->length . "\n";
+		echo 'NodesList dump: ' , $this->length , "\n";
 		PHP_SAPI === 'cli' && ob_get_level() > 0 && @ob_flush();
 	}
 }

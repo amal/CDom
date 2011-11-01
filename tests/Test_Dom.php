@@ -8,7 +8,7 @@ require_once __DIR__ . '/../CDom.php';
  *
  * @project Anizoptera CMF
  * @package system.CDom
- * @version $Id: Test_Dom.php 2727 2011-10-19 09:11:46Z samally $
+ * @version $Id: Test_Dom.php 2732 2011-10-19 15:56:00Z samally $
  */
 class Test_Dom extends PHPUnit_Framework_TestCase
 {
@@ -60,7 +60,7 @@ HTML;
 	protected function tearDown()
 	{
 		if ($this->dom) {
-			$this->dom->clean();
+			$this->dom->clear();
 		}
 		$this->dom = null;
 		gc_collect_cycles();
@@ -281,21 +281,21 @@ HTML;
 		$this->checkStructure($dom);
 		$this->assertEmpty($dom->nodes);
 		$this->assertEquals(CDom::NODE_DOCUMENT, $dom->type);
-		$dom->clean();
+		$dom->clear();
 
 
 		// ----
 		$dom = CDom::fromString($this->test_html2);
 		$this->checkStructure($dom);
-		$dom->clean();
+		$dom->clear();
 
 		$dom = CDom::fromString($this->test_html);
 		$this->checkStructure($dom);
-		$dom->clean();
+		$dom->clear();
 
 		$dom = CDom::fromString('<div>text</div>');
 		$this->checkStructure($dom);
-		$dom->clean();
+		$dom->clear();
 
 
 		// ----
@@ -353,7 +353,7 @@ HTML;
 		}
 		$this->assertTrue($catched);
 
-		$dom->clean();
+		$dom->clear();
 
 
 		// ----
@@ -383,7 +383,7 @@ HTML;
 		$this->assertEquals($dom->child(0), $dom->children[0]);
 		$this->assertEquals($dom->child(-1), $dom->children[0]);
 		$this->assertEmpty($dom->child(-2));
-		$dom->clean();
+		$dom->clear();
 
 
 		// ----
@@ -398,7 +398,7 @@ HTML;
 		$this->assertEquals($html, $doctype->outerHtml());
 		$this->assertEquals('', $doctype->html());
 		$this->assertEquals('', $doctype->text());
-		$dom->clean();
+		$dom->clear();
 
 
 		// ----
@@ -421,7 +421,7 @@ HTML;
 		$this->assertEquals($expected, $b->text());
 		$this->assertEquals($expected, $b->html());
 		$this->assertEquals($expected, $b->innerHtml());
-		$dom->clean();
+		$dom->clear();
 
 
 		// ----
@@ -442,7 +442,7 @@ HTML;
 		$this->assertEquals($expected, $text->html());
 		$this->assertEquals($expected, $text->text());
 		$this->assertEquals($expected, $text->outerHtml());
-		$dom->clean();
+		$dom->clear();
 
 
 		// ----
@@ -463,7 +463,7 @@ HTML;
 		$this->assertEquals('', $comment->text());
 		$this->assertEquals('', $comment->html());
 		$this->assertEquals($html, $comment->outerHtml());
-		$dom->clean();
+		$dom->clear();
 
 
 		// ----
@@ -489,7 +489,7 @@ HTML;
 		$this->assertEquals($text, $cdata->html());
 		$this->assertEquals($text, $cdata->text());
 		$this->assertEquals($html, $cdata->outerHtml());
-		$dom->clean();
+		$dom->clear();
 
 
 		// ----
@@ -540,7 +540,7 @@ HTML;
 		$res->text('<i>');
 		$this->assertEquals('<i>', $res->html());
 		$this->assertEquals('<i>', $res->text());
-		$dom->clean();
+		$dom->clear();
 
 
 		// ----
@@ -563,20 +563,20 @@ HTML;
 		$this->assertEquals('test', $br->text());
 		$this->assertEquals('test', $br->text);
 		$this->assertEquals('<br>test</br>', $br->outerHtml());
-		$dom->clean();
+		$dom->clear();
 
 
 		// ----
 		$dom = CDom::fromString('<tag disabled />');
 		$this->checkStructure($dom);
 		$this->assertEquals('disabled', (string)$dom->firstChild->disabled);
-		$dom->clean();
+		$dom->clear();
 
 		$dom = CDom::fromString('<tag on off />');
 		$this->checkStructure($dom);
 		$this->assertEquals('on', (string)$dom->firstChild->on);
 		$this->assertEquals('off', (string)$dom->firstChild->off);
-		$dom->clean();
+		$dom->clear();
 
 
 		// ----
@@ -584,13 +584,13 @@ HTML;
 		$this->checkStructure($dom);
 		$this->assertEquals('value', (string)$dom->firstChild->class);
 		$this->assertEquals('test', (string)$dom->firstChild->test);
-		$dom->clean();
+		$dom->clear();
 
 		$dom = CDom::fromString('<tag class="value test" />');
 		$this->checkStructure($dom);
 		$this->assertEquals('value test', (string)$dom->firstChild->class);
 		$this->assertEquals('', (string)$dom->firstChild->test);
-		$dom->clean();
+		$dom->clear();
 
 
 		// ----
@@ -606,7 +606,7 @@ HTML;
 		$this->assertEquals(1, count($dom->nodes[1]->nodes));
 		$this->assertEquals(1, count($dom->nodes[1]->children));
 		$this->assertEquals('td', $dom->nodes[1]->nodes[0]->name);
-		$dom->clean();
+		$dom->clear();
 
 
 		// ----
@@ -805,7 +805,7 @@ Hey Nicolas, I agree. In the next release, we'll remove the differentiation and 
 More
 TXT;
 		$this->assertEquals($expected, $txt);
-		$dom->clean();
+		$dom->clear();
 
 
 		// ----
@@ -819,7 +819,7 @@ TXT;
 		$this->checkStructure($dom);
 		$this->assertEquals(0, count($dom->firstChild->nodes));
 		$this->assertContains('medialand_adland_inline_div_750', $dom->firstChild->value);
-		$dom->clean();
+		$dom->clear();
 	}
 
 	/**
@@ -931,7 +931,7 @@ TXT;
 		$expected = '<b>Bold <u>Underline</u></b>';
 		$this->assertEquals($expected, $b->outerHtml());
 
-		$dom->clean();
+		$dom->clear();
 
 		// Restore
 		CDom::$bracketOpen     = $bo;
@@ -956,7 +956,7 @@ TXT;
 		$this->assertEquals($expected, $dom->html());
 		$this->assertEquals(1, count($dom->children));
 		$this->assertEquals(1, count($dom->nodes));
-		$dom->clean();
+		$dom->clear();
 
 
 		// Closing tags
@@ -968,7 +968,7 @@ TXT;
 		$this->assertEquals(1, count($div->nodes));
 		$this->assertEquals('</ div', $div->text());
 		$this->assertEquals(' </ div ', $div->firstNode->value);
-		$dom->clean();
+		$dom->clear();
 
 		$dom = CDom::fromString('<div></ div test>');
 		$this->assertEquals(1, count($dom->children));
@@ -977,7 +977,7 @@ TXT;
 		$this->assertEquals(0, count($div->children));
 		$this->assertEquals(0, count($div->nodes));
 		$this->assertEquals('<div></div>', $dom->outerHtml());
-		$dom->clean();
+		$dom->clear();
 
 		$dom = CDom::fromString('<div></');
 		$this->assertEquals(1, count($dom->children));
@@ -986,7 +986,7 @@ TXT;
 		$this->assertEquals(0, count($div->children));
 		$this->assertEquals(1, count($div->nodes));
 		$this->assertEquals('</', $div->text());
-		$dom->clean();
+		$dom->clear();
 
 
 		// XML declaration
@@ -998,7 +998,7 @@ TXT;
 		$this->assertEquals('<?xml version="1.0">', $text->value);
 		$tag = $dom->firstChild;
 		$this->assertEquals('<tag />', $tag->outerHtml());
-		$dom->clean();
+		$dom->clear();
 
 		$dom = CDom::fromString('<?x ?><tag />');
 		$this->assertEquals(1, count($dom->children));
@@ -1008,7 +1008,7 @@ TXT;
 		$this->assertEquals('<?x ?>', $text->value);
 		$tag = $dom->firstChild;
 		$this->assertEquals('<tag />', $tag->outerHtml());
-		$dom->clean();
+		$dom->clear();
 
 
 		// DOCTYPE
@@ -1020,7 +1020,7 @@ TXT;
 		$this->assertEquals('<!DOC html >', $text->value);
 		$tag = $dom->firstChild;
 		$this->assertEquals('<tag />', $tag->outerHtml());
-		$dom->clean();
+		$dom->clear();
 
 		$dom = CDom::fromString('<!DOCTYPE html');
 		$this->assertEquals(0, count($dom->children));
@@ -1028,7 +1028,7 @@ TXT;
 		$text = $dom->firstNode;
 		$this->assertEquals(CDom::NODE_TEXT, $text->type);
 		$this->assertEquals('<!DOCTYPE html', $text->value);
-		$dom->clean();
+		$dom->clear();
 
 		$dom = CDom::fromString('<!');
 		$this->assertEquals(0, count($dom->children));
@@ -1036,7 +1036,7 @@ TXT;
 		$text = $dom->firstNode;
 		$this->assertEquals(CDom::NODE_TEXT, $text->type);
 		$this->assertEquals('<!', $text->value);
-		$dom->clean();
+		$dom->clear();
 
 
 		// Tags
@@ -1046,7 +1046,7 @@ TXT;
 		$text = $dom->firstNode;
 		$this->assertEquals(CDom::NODE_TEXT, $text->type);
 		$this->assertEquals('<>', $text->value);
-		$dom->clean();
+		$dom->clear();
 
 		$dom = CDom::fromString('<foo class="bar"');
 		$this->assertEquals(0, count($dom->children));
@@ -1054,7 +1054,7 @@ TXT;
 		$text = $dom->firstNode;
 		$this->assertEquals(CDom::NODE_TEXT, $text->type);
 		$this->assertEquals('<foo class="bar"', $text->value);
-		$dom->clean();
+		$dom->clear();
 
 
 		// Comments
@@ -1064,7 +1064,7 @@ TXT;
 		$text = $dom->firstNode;
 		$this->assertEquals(CDom::NODE_TEXT, $text->type);
 		$this->assertEquals('<!- -->', $text->value);
-		$dom->clean();
+		$dom->clear();
 
 		$dom = CDom::fromString('<!--->');
 		$this->assertEquals(0, count($dom->children));
@@ -1072,7 +1072,7 @@ TXT;
 		$text = $dom->firstNode;
 		$this->assertEquals(CDom::NODE_TEXT, $text->type);
 		$this->assertEquals('<!--->', $text->value);
-		$dom->clean();
+		$dom->clear();
 
 		// CDATA
 		$dom = CDom::fromString('<![CDATA   ]]>');
@@ -1081,7 +1081,7 @@ TXT;
 		$text = $dom->firstNode;
 		$this->assertEquals(CDom::NODE_TEXT, $text->type);
 		$this->assertEquals('<![CDATA   ]]>', $text->value);
-		$dom->clean();
+		$dom->clear();
 
 		$dom = CDom::fromString('<![CDATA[ ]>');
 		$this->assertEquals(0, count($dom->children));
@@ -1089,7 +1089,7 @@ TXT;
 		$text = $dom->firstNode;
 		$this->assertEquals(CDom::NODE_TEXT, $text->type);
 		$this->assertEquals('<![CDATA[ ]>', $text->value);
-		$dom->clean();
+		$dom->clear();
 
 
 		// ----
@@ -1124,7 +1124,7 @@ TXT;
 		$expected = '<b><i></i></b>';
 		$this->assertEquals($expected, $dom->html());
 		$this->checkStructure($dom);
-		$dom->clean();
+		$dom->clear();
 	}
 
 	/**
@@ -1317,7 +1317,7 @@ HTML;
 			$this->assertEquals('img', $res[0]->name);
 			$this->assertEquals('id1', (string)$res[0]->attr('id'));
 
-			$dom->clean();
+			$dom->clear();
 		}
 
 		// Complex
@@ -1455,7 +1455,7 @@ HTML;
 			$res = $this->find('span[t=1][disabled]');
 			$this->assertEquals(1, $res->length);
 
-			$dom->clean();
+			$dom->clear();
 		}
 
 
@@ -1648,7 +1648,7 @@ HTML;
 			$this->assertEquals(1, $res->length);
 			$this->assertEquals('div', $res[0]->name);
 		}
-		$dom->clean();
+		$dom->clear();
 
 		// Pseudo classes part 2
 		$this->dom = $dom = CDom::fromString($this->test_html2);
@@ -1954,7 +1954,7 @@ HTML;
 			$res = $this->find(':has(p)');
 			$this->assertEquals(1, $res->length);
 		}
-		$dom->clean();
+		$dom->clear();
 	}
 
 	/**
@@ -2110,7 +2110,7 @@ HTML;
 		$this->assertEquals('p', $res[3]->name);
 
 
-		$dom->clean();
+		$dom->clear();
 	}
 
 	/**
@@ -2324,7 +2324,7 @@ HTML;
 		$this->assertEquals(2, (string)$res[1]->attr('n'));
 
 
-		$dom->clean();
+		$dom->clear();
 	}
 
 	/**
@@ -2416,14 +2416,14 @@ HTML;
 		$this->assertEquals($low, $attr->text());
 		$this->assertEquals($low, $attr->html());
 
-		$dom->clean();
+		$dom->clear();
 
 
 		$dom = CDom::fromString('<div disabled>');
 		$dom->isXml = true;
 		$this->assertEquals('<div disabled="disabled"></div>', $dom->html());
 
-		$dom->clean();
+		$dom->clear();
 
 		$list = new CDomNodesList();
 		$this->assertFalse($list->hasAttribute('class'));
@@ -2483,12 +2483,12 @@ HTML;
 		$dom2 = CDom::fromString('<div/>text<br>');
 		$dom2 = clone $dom2;
 		$this->checkStructure($dom2);
-		$dom2->clean();
+		$dom2->clear();
 
 		$dom2 = CDom::fromString('<div/>text<br>');
 		$dom2 = clone $dom2;
 		$this->checkStructure($dom2);
-		$dom2->clean();
+		$dom2->clear();
 
 
 		// Empty
@@ -2547,9 +2547,14 @@ HTML;
 		$dom->html('');
 		$this->assertEquals(0, count($dom->children));
 		$this->assertEquals(0, count($dom->nodes));
+		$this->checkStructure($dom);
 
 		$nlist = new CDomNodesList();
-		$nlist->add($list);
+		$nlist->add(array(
+			new CDomNodeTag('br', true),
+			new CDomNodeText('text'),
+			new CDomNodeTag('b'),
+		));
 		$dom->html($nlist);
 		$this->checkStructure($dom);
 		$this->assertEquals(2, count($dom->children));
@@ -2576,6 +2581,11 @@ HTML;
 		$this->assertEquals(1, count($dom->nodes));
 		$this->assertEquals($html, $dom->text());
 
+		$list = array(
+			new CDomNodeTag('br', true),
+			new CDomNodeText('text'),
+			new CDomNodeTag('b'),
+		);
 		$node = new CDomNodeTag('p');
 		$node->text($list);
 		$this->assertEquals(0, count($node->children));
@@ -2583,6 +2593,12 @@ HTML;
 		$this->assertEquals('text', $node->text());
 		$this->assertEquals('text', $node->html());
 
+		$nlist = new CDomNodesList();
+		$nlist->add(array(
+			new CDomNodeTag('br', true),
+			new CDomNodeText('text'),
+			new CDomNodeTag('b'),
+		));
 		$node->empty()->text($nlist);
 		$this->assertEquals(0, count($node->children));
 		$this->assertEquals(1, count($node->nodes));
@@ -2735,7 +2751,7 @@ HTML;
 		$this->assertEmpty($dom2->firstChild);
 		$this->assertEmpty($dom2->lastChild);
 		$this->assertNotEquals($dom2, $div->ownerDocument);
-		$dom2->clean();
+		$dom2->clear();
 
 		$this->assertEquals(2, count($dom->children));
 		$this->assertEquals(3, count($dom->nodes));
@@ -2757,7 +2773,7 @@ HTML;
 		$this->assertEquals(1, count($dom->children));
 		$this->assertEquals(1, count($dom->nodes));
 		$this->assertEquals($dom, $dom->firstChild->firstNode->ownerDocument);
-		$dom2->clean();
+		$dom2->clear();
 
 		$dom2 = CDom::fromString('<div>text</div>');
 		$list = $dom->html('<p/><p/><p/>')->find('p');
@@ -2770,7 +2786,7 @@ HTML;
 		$this->assertEquals(3, count($dom->nodes));
 		$expected = '<p><div>text</div></p><p><div>text</div></p><p><div>text</div></p>';
 		$this->assertEquals($expected, $dom->html());
-		$dom2->clean();
+		$dom2->clear();
 
 
 		// Prepend
@@ -3423,8 +3439,8 @@ HTML;
 		$this->checkStructure($dom);
 
 
-		$dom->clean();
-		$dom2->clean();
+		$dom->clear();
+		$dom2->clear();
 	}
 
 	/**
@@ -3824,6 +3840,6 @@ HTML;
 		$this->assertEquals(8, $list2->length);
 
 
-		$dom->clean();
+		$dom->clear();
 	}
 }
